@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Directive Compiler</title>
+  <style>
+    .kj-header {
+      background-color: #f0f0f0;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .kj-btn {
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .kj-sidebar {
+      width: 200px;
+      background-color: #ddd;
+      padding: 10px;
+    }
+
+    .kj-content {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .kj-component {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ccc;
+    }
+
+    .kj-container {
+      display: flex;
+      flex-direction: row;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ----------------------------------------------------------------------------
+    // ベースクラスとコンポーネント定義
+    // ----------------------------------------------------------------------------
+    class Component {
+      constructor(tag, props = {}, children = []) {
+        this.tag = tag;
+        this.props = props;
+        this.children = children;
+      }
+
+      render() {
+        const element = document.createElement(this.tag);
+
+        for (const [key, value] of Object.entries(this.props)) {
+          if (key === 'style') {
+            element.setAttribute('style', value);
+          } else {
+            element.setAttribute(key, value);
+          }
+        }
+
+        this.children.forEach(child => {
+          if (child instanceof Component) {
+            element.appendChild(child.render());
+          } else if (typeof child === 'string') {
+            element.appendChild(document.createTextNode(child));
+          }
+        });
+
+        return element;
+      }
+    }
+
+    // ----------------------------------------------------------------------------
+    // ディレクティブ・コンパイラ
+    // ----------------------------------------------------------------------------
+    class DirectiveCompiler {
+      constructor() {
+        this.componentMap = {
+          'kj-component': KjComponent,
+          'kj-header': KjHeader,
+          'kj-text': TextComponent,
+          'kj-btn': KjBtn,
+          'kj-sidebar': KjSidebar,
+          'kj-content': KjContent,
+          'kj-container': KjContainer
+        };
+      }
+
+      /**
+       * タグ名ごとに「デフォルトの子要素（テンプレート）」を返す
+       * - 複数兄弟要素がある場合は一つのラッパ(divなど)で囲むことで
+       *   DOMParser で正しくパースさせる
+       */
+      getDefaultChildrenTemplate(tagName) {
+        switch (tagName) {
+          case 'kj-header':
+            // 複数の子要素を単一の <div> でラップする
+            return `
+              <div>
+                <kj-text>TODO</kj-text>
+                <kj-text>●●さん</kj-text>
+                <kj-btn>ログアウト</kj-btn>
+              </div>
+            `;
+          default:
+            return '';
+        }
+      }
+
+      /**
+       * HTML文字列をパースして、ルート要素に対応するコンポーネントを返す
+       */
+      parseDirective(htmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        const root = doc.body.firstElementChild;
+        return this.compileNode(root);
+      }
+
+      /**
+       * Node を再帰的に解析し、対応するコンポーネントを生成する
+       */
+      compileNode(node) {
+        if (!node) return null;
+
+        const tagName = node.tagName.toLowerCase();
+        const ComponentClass = this.componentMap[tagName] || Component;
+
+        // Node から属性を取得
+        const props = {};
+        Array.from(node.attributes).forEach(attr => {
+          props[attr.name] = attr.value;
+        });
+
+        // Node の子要素を配列化
+        let childNodes = Array.from(node.childNodes);
+
+        // 子ノードが無ければ、「デフォルトテンプレート」を解析して子要素を再生成
+        if (childNodes.length === 0) {
+          const defaultTemplate = this.getDefaultChildrenTemplate(tagName);
+          if (defaultTemplate) {
+            // デフォルトテンプレートをパースすると "Component" になる
+            const defaultRoot = this.parseDirective(defaultTemplate);
+            if (defaultRoot) {
+              // defaultRoot は (必要に応じて) さらに下の子要素を持つ可能性がある
+              childNodes = defaultRoot.children;
+            }
+          }
+        }
+
+        // 子ノードを再帰的にパース or テキストとして処理
+        const children = childNodes
+          .map(child => {
+            if (child instanceof Component) {
+              return child;
+            }
+            if (child.nodeType === Node.ELEMENT_NODE) {
+              return this.compileNode(child);
+            }
+            if (child.nodeType === Node.TEXT_NODE) {
+              const text = child.textContent.trim();
+              return text.length > 0 ? text : null;
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        // コンポーネントを生成して返す
+        return new ComponentClass(props, children);
+      }
+    }
+
+    // ----------------------------------------------------------------------------
+    // 各種コンポーネント
+    // ----------------------------------------------------------------------------
+    class KjComponent extends Component {
+      constructor(props, children) {
+        super('div', { class: 'kj-component', ...props }, children);
+      }
+    }
+
+    /**
+     * KjHeader: デフォルトの内部子要素（TODO/●●さん/ログアウト）生成ロジックは
+     * 「コンパイラ側」で保持するため、ここでは単純に constructor を定義するだけ
+     */
+    class KjHeader extends Component {
+      constructor(props, children) {
+        super('div', { class: 'kj-header', ...props }, children);
+      }
+    }
+
+    class KjBtn extends Component {
+      constructor(props, children) {
+        super('button', { class: 'kj-btn', ...props }, children);
+      }
+    }
+
+    class KjSidebar extends Component {
+      constructor(props, children) {
+        super(
+          'div',
+          { class: 'kj-sidebar', ...props },
+          children.length ? children : ['サイドバー内容']
+        );
+      }
+    }
+
+    class KjContent extends Component {
+      constructor(props, children) {
+        super(
+          'div',
+          { class: 'kj-content', ...props },
+          children.length ? children : ['コンテンツ内容']
+        );
+      }
+    }
+
+    class KjContainer extends Component {
+      constructor(props, children) {
+        // props のみ渡されてきた場合はデフォルトで [KjSidebar, KjContent]
+        const defaultChildren = [new KjSidebar({}, []), new KjContent({}, [])];
+        super(
+          'div',
+          { class: 'kj-container', ...props },
+          children.length ? children : defaultChildren
+        );
+      }
+    }
+
+    class TextComponent extends Component {
+      constructor(props, children) {
+        super('div', props, children);
+      }
+    }
+
+    // ----------------------------------------------------------------------------
+    // 実際の使用例
+    // ----------------------------------------------------------------------------
+    const templateHtml = `
+      <kj-component style="border: 1px solid black;">
+        <kj-header style="background: lightblue;"></kj-header>
+        <kj-container></kj-container>
+      </kj-component>
+    `;
+
+    const compiler = new DirectiveCompiler();
+    // <kj-component> をパースし、内部も再帰的にコンポーネント化
+    const appComponent = compiler.parseDirective(templateHtml);
+
+    // レンダリングして DOM に追加
+    const appElement = document.getElementById('app');
+    appElement.appendChild(appComponent.render());
+  </script>
+</body>
+</html>

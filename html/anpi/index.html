@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="index.css">
+</head>
+<body>
+	<div class="root" id="root">
+		<main class="main" id="main">
+
+			<div class="filterSection">
+				<div class="filterPanel--left">
+					<div class="anpiStatus--NA">未回答</div>
+					<div class="anpiStatus--OK">無事です</div>
+					<div class="NG">問題あり</div>
+				</div>
+
+				<div class="filterPanel--right">
+					<div class="filterOptions">
+						<div class="filterOptions_group">
+							<label for="">グループ</label>
+							<select>
+								<option value="">マーケティング</option>
+								<option value="">コンサルティング</option>
+							</select>
+						</div>
+
+						<div class="filterOptions_target">
+							<div>表示対象</div>
+							<div>表示期間内</div>
+							<div>全従業員</div>
+						</div>
+						
+						<div class="filterOptions_attendance">
+							<div>出社可否</div>
+							<div>可能</div>
+							<div>不可能</div>
+							<div>わからない</div>
+						</div>
+
+						<div class="filterOptions_actions">
+							<button type="button">リセット</button>
+							<button type="button">フィルターを適用</button>
+						</div>
+					</div>
+					<div class="filterResult"></div>
+				</div>	
+
+			</div>
+
+
+			<div class="anpiSection">
+
+				<div class="mailSection">
+					<select class="mailSection_type">
+						<option value="地震">地震</option>
+					</select>
+					<button type="button" class="mailSection_anpi">安否確認を配信する</button>
+					<button type="button" class="mailSection_bulk">一括メール</button>
+				</div>
+
+				<div class="pageSection">
+					<label for="">件数</label>
+					<select class="displayLine">
+						<option value="100">100</option>
+					</select>
+					<div class="currentPage">1-10 of 130件</div>
+					<div class="pagenation">
+						<div class="pagenation_block pagenation_start"><</div>
+						<div class="pagenation_block pagenation_page">1</div>
+						<div class="pagenation_block pagenation_page">2</div>
+						<div class="pagenation_block pagenation_page">3</div>
+						<div class="pagenation_block pagenation_page">4</div>
+						<div class="pagenation_block pagenation_page">5</div>
+						<div class="pagenation_block pagenation_page">6</div>
+						<div class="pagenation_block pagenation_page">7</div>
+						<div class="pagenation_block pagenation_page">8</div>
+						<div class="pagenation_block pagenation_end">></div>
+					</div>
+				</div>
+				
+				<div class="employeeList">
+					<table>
+						<thead>
+							<tr>
+								<th><input type="checkbox"></th>
+								<th>氏名</th>
+								<th>電話番号</th>
+								<th>メールアドレス</th>
+								<th>前回配信</th>
+								<th>回答</th>
+								<th>安否状況</th>
+								<th>怪我</th>
+								<th>出社</th>
+								<th>自宅</th>
+								<th>コメント</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><input type="checkbox" value="2"></td>
+								<td>佐藤 花子</td>
+								<td>080-9876-5432</td>
+								<td>sato@example.com</td>
+								<td>2023-03-20 09:20</td>
+								<td>いいえ</td>
+								<td>要確認</td>
+								<td>あり</td>
+								<td>いいえ</td>
+								<td>はい</td>
+								<td>怪我のため休み</td>
+							</tr>
+							<tr>
+								<td><input type="checkbox" value="3"></td>
+								<td>鈴木 次郎</td>
+								<td>070-5555-6666</td>
+								<td>suzuki@example.com</td>
+								<td>2023-03-19 18:30</td>
+								<td>未回答</td>
+								<td>不明</td>
+								<td>なし</td>
+								<td>いいえ</td>
+								<td>いいえ</td>
+								<td>連絡待ち</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+		</main>
+	</div>
+</body>
+</html>
